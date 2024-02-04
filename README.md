@@ -20,3 +20,5 @@ keep_price=0
 ```
 
 - Run `acb.py` or `mu.py` in console
+- `acb.py {market_id} {default_price} {min_price} {step} {single_target}`
+- You can use `-c` instead of `{market_id}` to use cached `inventory.json`

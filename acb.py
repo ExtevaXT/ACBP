@@ -16,6 +16,7 @@ single_target = 0
 cooldown_delay = 60
 default_delay = 15
 short_delay = 5
+cache = False
 
 inventory = None
 inventory_item = None
@@ -31,11 +32,11 @@ default_price = 0
 if platform.system() == 'Windows': ctypes.windll.kernel32.SetConsoleTitleW("ACBP")
 print('AntiCounterBot | Python Version')
 
-def load_inventory(cached=False):
+def load_inventory():
     global inventory
     index_path = 'index.txt'
     cache_path = 'inventory.json'
-    if(cached == True):
+    if(cache == True):
         with open(cache_path, "r") as file:
             inventory = json.load(file)
     else:
@@ -57,22 +58,39 @@ def select_item():
         if matches:
             global inventory_item
             inventory_item = matches[0]
-            name = inventory_item['market_hash_name']
-            print(f"Selected: {name}")
+            print(f"Selected: {inventory_item['market_hash_name']}")
             if platform.system() == 'Windows': ctypes.windll.kernel32.SetConsoleTitleW(f"ACBP | {name}")
             break
         else: print('Invalid ID')
 
+# TODO Test it
 def select_offer():
     response = requests.get(f'{api}/items/?key={key}')
     if response.status_code == 200:
-        items = response.json()['items']
-        matches = list(filter(lambda x: x["item_id"] == market_item_id, items))
-        if items:
-            global inventory_item
+        matches = list(filter(lambda x: x["item_id"] == market_item_id, 
+                              response.json()['items']))
+        if matches:
+            global inventory_item, steam_item_id
             item = matches[0]
+            # Retrieving asset ID directly from steam, market does not provide it
+            response = requests.get(f'{api}/get-my-steam-id/?key={key}')
+            if response.status_code == 200:
+                steam_id = response.json()['steamid64']
+                app_id = 440 if "tf2" in api else (710 if "cs" in api else (570 if "dota" in api else 0))
+                response = requests.get(f'https://steamcommunity.com/inventory/{steam_id}/{app_id}/2?l=english&count=5000')
+                if response.status_code == 200:
+                    inventory = response.json()
+                    steam_item = next(asset for asset in inventory.assets if asset['classid'] == item['classid'] and asset['instanceid'] == item['instanceid'])
+                    # Pray for finding right one
+                    steam_item_id = steam_item['assetid']
+                    inventory_item = {
+                        'market_hash_name': item['market_hash_name'],
+                        'instanceid': item['instanceid'],
+                        'classid': item['classid'],
+                        'id': steam_item['assetid']
+                    }
 
-def set_prices():
+def set_prices(): 
     global default_price, min_price
     default_price = int(input("Enter default_price: "))
     min_price = int(input("Enter min_price: "))
@@ -174,14 +192,15 @@ def process_item():
     outranned = 0            
     
 # Parse args for market utility
-if len(sys.argv) > 1: market_item_id = int(sys.argv[1])
+if len(sys.argv) > 1: 
+    if sys.argv[1] == '-c': cache = True
+    else: market_item_id = int(sys.argv[1])
 if len(sys.argv) > 2: default_price = int(sys.argv[2])
 if len(sys.argv) > 3: min_price = int(sys.argv[3])
 if len(sys.argv) > 4: step = int(sys.argv[4])
 if len(sys.argv) > 5: single_target = int(sys.argv[5])
 
-# TODO Make cache
-load_inventory(cached=True)
+load_inventory()
 select_item()
 set_prices()
 print('Starting main loop')
