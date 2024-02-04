@@ -10,11 +10,12 @@ import flash
 from config import *
 
 # TODO Operate on second lowest when reached min_price, some of them do that shit
+# TODO Fix item_on_sale bug (Adding existing offer)
 
 single_target = 0
-cooldown_delay = 60000
-default_delay = 15000
-short_delay = 5000
+cooldown_delay = 60
+default_delay = 15
+short_delay = 5
 
 inventory = None
 inventory_item = None
@@ -71,9 +72,6 @@ def select_offer():
             global inventory_item
             item = matches[0]
 
-
-
-
 def set_prices():
     global default_price, min_price
     default_price = int(input("Enter default_price: "))
@@ -87,21 +85,29 @@ def check_prices():
     response = requests.get(f'{api}/search-item-by-hash-name/?key={key}&hash_name={inventory_item["market_hash_name"]}')
     if response.status_code == 200:
         data = response.json()['data']
+        # No other offers
         if len(data) == 0:
             lowest_price = default_price;
             return
         lowest_price = data[0]['price']
+        # Single target (Targetting item with stacked offers)
         if single_target == 1:
-            # lowest_price = list(filter(lambda x: str(x["instance"]) == inventory_item['instanceid'] and str(x["class"]) == inventory_item['classid'], response['data']))[0]['price']
             lowest_price = next(x['price'] for x in data if str(x['instance']) == inventory_item['instanceid'] and str(x['class']) == inventory_item['classid'])
-        if lowest_price < min_price: price = default_price
-        elif lowest_price != min_price: price = lowest_price - step
+        # Reached min_price
+        if lowest_price < min_price: 
+            price = default_price
+        # Main step
+        elif lowest_price != min_price: 
+            price = lowest_price - step
+        # Target second offer in item?
         if lowest_price == price and len(data) >= 2 and data[0]['count'] == 1:
-            if default_price == 0: price = data[1]['price'] - step
+            if default_price == 0: 
+                price = data[1]['price'] - step
             
 def process_item():
     global market_item_id, price, outranned
     check_prices()
+    # Reached min_price
     if price <= min_price:
         if market_item_id is None and default_price != 0:
             price = default_price
@@ -109,12 +115,11 @@ def process_item():
             print(f'{now()} Reached min price, lowest: {lowest_price}')
             sleep(cooldown_delay)
             return
-    # If we are first skip
+    # Advantage skip
     if market_item_id and price == lowest_price:
         sleep(short_delay)
         return
-    # Restart if they are banging us
-    # If gap more than {threshold} iterations
+    # Re-add if enemy have advantage (If gap more than {threshold} iterations)
     if market_item_id and outranned >= threshold:
         response = requests.get(f"{api}/set-price?key={key}&item_id={market_item_id}&price=0&cur=RUB")
         if response.status_code == 200:
@@ -125,6 +130,7 @@ def process_item():
             return
     # First iteration
     if market_item_id is None:
+        print('Started first iteration')
         if default_price: price = default_price
         response = requests.get(f"{api}/add-to-sale?key={key}&id={inventory_item['id']}&price={price}&cur=RUB")
         if response.status_code == 200:
@@ -141,7 +147,7 @@ def process_item():
                 print(f"{now()} {data['error']}")
                 sleep(short_delay)
                 return
-    
+    # Setting calculated price
     response = requests.get(f"{api}/set-price?key={key}&item_id={market_item_id}&price={price}&cur=RUB")
     if response.status_code == 200:    
         data = response.json()
@@ -164,20 +170,21 @@ def process_item():
                 print(f"{now()} {inventory_item['market_hash_name']} has been bought for: {price}")
                 flash.flash_console_icon()
                 input()
+    # Refresh outran
     outranned = 0            
     
-# flash.flash_console_icon()
-
+# Parse args for market utility
 if len(sys.argv) > 1: market_item_id = int(sys.argv[1])
 if len(sys.argv) > 2: default_price = int(sys.argv[2])
 if len(sys.argv) > 3: min_price = int(sys.argv[3])
 if len(sys.argv) > 4: step = int(sys.argv[4])
 if len(sys.argv) > 5: single_target = int(sys.argv[5])
 
+# TODO Make cache
 load_inventory(cached=True)
-# time.sleep(1)
 select_item()
 set_prices()
+print('Starting main loop')
 while True:
     process_item()
-    sleep(cooldown_delay)
+    sleep(default_delay)

@@ -14,11 +14,14 @@ def inventory():
     ''
 def offers():
     ''
+# Passed
 def update():
     response = requests.get(f'{api}/update-inventory/?key={key}')
-    if response.status_code == 200 and response['success']:
-        print('Requested market inventory update')
-        # It actually will update after 5s-10min
+    if response.status_code == 200:
+        data = response.json()
+        if data['success']:
+            print('Requested market inventory update')
+            # It actually will update after 5s-10min
 def add(args):
     response = requests.get(f'{api}/add-to-sale?key={key}&id={args[0]}&price={args[1]}&cur=RUB')
     if response.status_code == 200:
@@ -29,10 +32,11 @@ def add(args):
 def set(args):
     response = requests.get(f'{api}/set-price?key={key}&item_id={args[0]}&price={args[1]}&cur=RUB')
     if response.status_code == 200:
-        if response['success']:
+        data = response.json()
+        if data['success']:
             print(f'Setted price {args[1]} for {args[0]}')
         else:
-            print(response["error"])
+            print(data["error"])
 def check():
     ''
     
