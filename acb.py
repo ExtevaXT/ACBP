@@ -58,7 +58,8 @@ def select_item():
         if matches:
             global inventory_item
             inventory_item = matches[0]
-            print(f"Selected: {inventory_item['market_hash_name']}")
+            name = inventory_item['market_hash_name']
+            print(f"Selected: {name}")
             if platform.system() == 'Windows': ctypes.windll.kernel32.SetConsoleTitleW(f"ACBP | {name}")
             break
         else: print('Invalid ID')
@@ -115,7 +116,7 @@ def check_prices():
         if lowest_price < min_price: 
             price = default_price
         # Main step
-        elif lowest_price != min_price: 
+        elif lowest_price != price: 
             price = lowest_price - step
         # Target second offer in item?
         if lowest_price == price and len(data) >= 2 and data[0]['count'] == 1:
@@ -133,19 +134,21 @@ def process_item():
             print(f'{now()} Reached min price, lowest: {lowest_price}')
             sleep(cooldown_delay)
             return
-    # Advantage skip
-    if market_item_id and price == lowest_price:
-        sleep(short_delay)
-        return
-    # Re-add if enemy have advantage (If gap more than {threshold} iterations)
-    if market_item_id and outranned >= threshold:
-        response = requests.get(f"{api}/set-price?key={key}&item_id={market_item_id}&price=0&cur=RUB")
-        if response.status_code == 200:
-            print(f'{now()} Reached threshold, re-adding item')
-            market_item_id = None
-            # Let it cook
-            sleep(cooldown_delay + short_delay)
+    
+    if market_item_id is not None:
+        # Advantage skip
+        if price == lowest_price:
+            sleep(short_delay)
             return
+        # Re-add if enemy have advantage (If gap more than {threshold} iterations)
+        if outranned >= threshold:
+            response = requests.get(f"{api}/set-price?key={key}&item_id={market_item_id}&price=0&cur=RUB")
+            if response.status_code == 200:
+                print(f'{now()} Reached threshold, re-adding item')
+                market_item_id = None
+                # Let it cook
+                sleep(cooldown_delay + short_delay)
+                return
     # First iteration
     if market_item_id is None:
         print('Started first iteration')
