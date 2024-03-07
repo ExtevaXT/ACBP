@@ -25,5 +25,5 @@ keep_price=0
 - You can use `-c` instead of `{market_id}` to use cached inventory
 
 ## Notes
-- All classic frontends is handled fine, tf2, cs, dota.
+- All classic frontends are handled fine, tf2, cs, dota.
 - New cs frontend is handled bad, chinese monkeys got better tech for it
