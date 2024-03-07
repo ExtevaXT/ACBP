@@ -5,6 +5,9 @@ import platform
 import ctypes
 from config import *
 
+# TODO get that list and make summary of all buys
+#   https://tf2.tm/api/v2/get-list-items-info?key=[your_secret_key]&list_hash_name[]=[market_hash_name]&list_hash_name[]=[market_hash_name]
+
 if platform.system() == 'Windows': ctypes.windll.kernel32.SetConsoleTitleW("Market Utility")
 print('Market Utility | Python Version')
 

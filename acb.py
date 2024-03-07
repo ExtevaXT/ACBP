@@ -5,14 +5,15 @@ from time import sleep, localtime, strftime
 import json
 import datetime
 import sys
+# import logging
 
 import flash
 from config import *
 
 # TODO Operate on second lowest when reached min_price, some of them do that shit
 # TODO Fix item_on_sale bug (Adding existing offer)
-
-single_target = 0
+# TODO Add logging instead of print
+# TODO It stops to update if lowest offer highed up
 cooldown_delay = 60
 default_delay = 15
 short_delay = 5
@@ -28,6 +29,9 @@ outranned = 0
 
 min_price = 0
 default_price = 0
+
+# logging.basicConfig(level=logging.INFO, filename="py_log.log",filemode="w",
+#                     format="%(asctime)s %(levelname)s %(message)s")
 
 if platform.system() == 'Windows': ctypes.windll.kernel32.SetConsoleTitleW("ACBP")
 print('AntiCounterBot | Python Version')
@@ -64,7 +68,7 @@ def select_item():
             break
         else: print('Invalid ID')
 
-# TODO Test it
+# TODO Does it work?
 def select_offer():
     response = requests.get(f'{api}/items/?key={key}')
     if response.status_code == 200:
