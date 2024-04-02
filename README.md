@@ -1,5 +1,5 @@
 # ACBP
- Python version of [that]("https://github.com/ExtevaXT/AntiCounterBot") garbage
+ Python version of [this]("https://github.com/ExtevaXT/AntiCounterBot")
 
 ## Features
 
@@ -26,4 +26,3 @@ keep_price=0
 
 ## Notes
 - All classic frontends are handled fine, tf2, cs, dota.
-- New cs frontend is handled bad, chinese monkeys got better tech for it
