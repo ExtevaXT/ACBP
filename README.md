@@ -1,5 +1,5 @@
 # ACBP
- Python version of [this]("https://github.com/ExtevaXT/AntiCounterBot")
+ Python version of [this](https://github.com/ExtevaXT/AntiCounterBot)
 
 ## Features
 
