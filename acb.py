@@ -105,28 +105,33 @@ def now(): return strftime("[%Y-%m-%d %H:%M:%S]", localtime())
 
 def check_prices():
     global lowest_price, price
-    response = requests.get(f'{api}/search-item-by-hash-name/?key={key}&hash_name={inventory_item["market_hash_name"]}')
-    if response.status_code == 200:
-        data = response.json()['data']
-        # No other offers
-        if len(data) == 0:
-            lowest_price = default_price;
-            return
-        lowest_price = data[0]['price']
-        # Single target (Targetting item with stacked offers)
-        if single_target == 1:
-            lowest_price = next(x['price'] for x in data if str(x['instance']) == inventory_item['instanceid'] and str(x['class']) == inventory_item['classid'])
-        # Reached min_price
-        if lowest_price < min_price: 
-            price = default_price
-        # Main step
-        elif lowest_price != price: 
-            price = lowest_price - step
-        # Target second offer in item?
-        if lowest_price == price and len(data) >= 2 and data[0]['count'] == 1:
-            if default_price == 0: 
-                price = data[1]['price'] - step
-            
+    try:   
+        response = requests.get(f'{api}/search-item-by-hash-name/?key={key}&hash_name={inventory_item["market_hash_name"]}')
+        if response.status_code == 200:
+            data = response.json()['data']
+            # No other offers
+            if len(data) == 0:
+                lowest_price = default_price;
+                return
+            lowest_price = data[0]['price']
+            # Single target (Targetting item with stacked offers)
+            if single_target == 1:
+                lowest_price = next(x['price'] for x in data if str(x['instance']) == inventory_item['instanceid'] and str(x['class']) == inventory_item['classid'])
+            # Reached min_price
+            if lowest_price < min_price: 
+                price = default_price
+            # Main step
+            elif lowest_price != price: 
+                price = lowest_price - step
+            # Target second offer in item?
+            if lowest_price == price and len(data) >= 2 and data[0]['count'] == 1:
+                if default_price == 0: 
+                    price = data[1]['price'] - step
+    except Exception as e:
+        print(e)
+        sleep(default_delay)
+        check_prices()
+        
 def process_item():
     global market_item_id, price, outranned
     check_prices()

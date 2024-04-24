@@ -2,8 +2,8 @@
  Python version of [this](https://github.com/ExtevaXT/AntiCounterBot)
 
 ## Features
-
-- Use cached inventory if you are banned
+- Destroy counterbots
+- Use cached inventory
 - No async
 - Better code
 
@@ -18,6 +18,7 @@ threshold=4
 step=1
 single_target = 0
 keep_price=0
+steam_cookie = '...' # steamLoginSecure from steam cookies
 ```
 
 - Run `acb.py` or `mu.py` in console
